@@ -14,3 +14,5 @@ Post.prototype.calcChangeInUpVotes = (prevUpVotes) => {};
 
 //set the change in DownVotes
 Post.prototype.calcChangeInUpVotes = (prevUpVotes) => {};
+
+module.exports = Post;

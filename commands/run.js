@@ -16,15 +16,15 @@ const run = async (subreddit, numPosts) => {
 
   const currentExe = new Execution();
 
+  //data gathering and storing
   await currentExe.fetchPostsAndExeDetails(DEFAULT_SUBREDDIT, DEFAULT_NUMPOSTS);
+  currentExe.getNewPosts();
 
-  console.log('current Exe is ', currentExe);
-
-  currentExe.postsArray.forEach((post) => {
-    console.log(`${post.data.title} \nupvotes: ${post.data.ups} \n`);
-  });
-
-  console.log(chalk.blue('Program executed!'));
+  //data printing
+  currentExe.printExeDetails();
+  currentExe.printNewPosts();
+  //testing only
+  //   console.log('currentExe is ', currentExe);
 };
 
 module.exports = run;
