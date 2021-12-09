@@ -5,14 +5,14 @@ class Post {
     this.upVotes = upVotes;
     this.downVotes = downVotes;
     this.changeInUpVotes = 0;
-    this.changedInDownVotes = 0;
+    this.changeInDownVotes = 0;
   }
 }
 
-//set the change in UpVotes
-Post.prototype.calcChangeInUpVotes = (prevUpVotes) => {};
-
-//set the change in DownVotes
-Post.prototype.calcChangeInUpVotes = (prevUpVotes) => {};
+//calculates and sets the change in upVotes and downVotes compared to the same post from the previous run
+Post.prototype.calcAndSetChangeInVotes = function (prevUpVotes, prevDownVotes) {
+  this.changeInUpVotes = this.upVotes - prevUpVotes;
+  this.changeInDownVotes = this.downVotes - prevDownVotes;
+};
 
 module.exports = Post;

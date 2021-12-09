@@ -43,7 +43,7 @@ Execution.prototype.fetchPostsAndExeDetails = async function (
 };
 
 //determines which posts are new and sets them
-Execution.prototype.getNewPosts = function (prevPosts = {}) {
+Execution.prototype.getNewPosts = function (prevPosts) {
   for (const [postId, post] of Object.entries(this.allPosts)) {
     if (!prevPosts[postId]) {
       this.newPosts[post.id] = post;
@@ -51,12 +51,46 @@ Execution.prototype.getNewPosts = function (prevPosts = {}) {
   }
 };
 
+//determine which posts from the previous run left the top numPosts
+Execution.prototype.getOutOfTopPosts = function (prevPosts) {
+  for (const [postId, post] of Object.entries(prevPosts)) {
+    if (!this.allPosts[postId]) {
+      this.postsOutOfTop[postId] = post;
+    }
+  }
+};
+
+//determine which posts from the previous run had a change in votes
+Execution.prototype.getChangedPosts = function (prevPosts) {
+  for (const [postId, post] of Object.entries(this.allPosts)) {
+    //if the prev run has the post, and there is a change in upvotes or downvotes
+    if (
+      prevPosts[postId] &&
+      (post.upVotes - prevPosts[postId].upVotes != 0 ||
+        post.downVotes - prevPosts[postId].downVotes != 0)
+    ) {
+      post.calcAndSetChangeInVotes(
+        prevPosts[postId].upVotes,
+        prevPosts[postId].downVotes
+      );
+      this.changedPosts[postId] = post;
+    }
+  }
+};
+
 //print the details of the current run including current time, subreddit, and time since the last run
 Execution.prototype.printExeDetails = function () {
   const timeAmOrPm = this.time.getHours() / 12 >= 1 ? 'PM' : 'AM';
+  //formatting: add a 0 infront of minutes if it the value is less than 10
+  const minutes =
+    this.time.getMinutes() / 10 > 1
+      ? this.time.getMinutes()
+      : `0${this.time.getMinutes()}`;
   const timeString = `${this.time.getFullYear()}-${this.time.getMonth()}-${this.time.getDate()} ${
     this.time.getHours() % 12
-  }:${this.time.getMinutes()}${timeAmOrPm}`;
+  }:${minutes}${timeAmOrPm}`;
+
+  console.log('\n');
   console.log(
     chalk.blue.bold('Reddit Polling Tool Execution run at '),
     timeString
@@ -66,7 +100,7 @@ Execution.prototype.printExeDetails = function () {
   console.log('\n');
 };
 
-//prints new posts
+//prints new posts in order of upvotes
 Execution.prototype.printNewPosts = function () {
   if (Object.keys(this.newPosts).length) {
     console.log(chalk.blue.bold('New Posts:'));
@@ -77,7 +111,7 @@ Execution.prototype.printNewPosts = function () {
       (post1, post2) => post2.upVotes - post1.upVotes
     );
     sortedNewPostsArray.forEach((post, index) => {
-      console.log(`${index + 1}.`, post.title);
+      console.log(`${chalk.yellow.bold(index + 1)}.`, post.title);
       console.log('upvotes: ', chalk.green.bold(post.upVotes.toLocaleString()));
       console.log(
         'downvotes: ',
@@ -90,10 +124,67 @@ Execution.prototype.printNewPosts = function () {
   }
 };
 
-//prints posts moved out of the top numPosts e.g. posts that have left the top 75
-Execution.prototype.printOutOfTopPosts = function (prevPostsObj) {};
+//prints posts moved out of the top numPosts e.g. posts that have left the top 75 if numPosts = 75
+Execution.prototype.printOutOfTopPosts = function () {
+  if (Object.keys(this.postsOutOfTop).length) {
+    console.log(chalk.blue.bold(`Posts that left the top ${this.numPosts}:`));
+
+    const outOfTopPostsArray = Object.values(this.postsOutOfTop);
+    //create a shallow copy to do in-place sorting
+    const sortedOutOfTopPostsArray = [...outOfTopPostsArray].sort(
+      (post1, post2) => post2.upVotes - post1.upVotes
+    );
+    sortedOutOfTopPostsArray.forEach((post, index) => {
+      console.log(`${chalk.yellow.bold(index + 1)}.`, post.title);
+      console.log('upvotes: ', chalk.green.bold(post.upVotes.toLocaleString()));
+      console.log(
+        'downvotes: ',
+        chalk.red.bold(post.downVotes.toLocaleString()),
+        '\n'
+      );
+    });
+  } else {
+    console.log(chalk.blue.bold(`No posts left the top ${this.numPosts} \n`));
+  }
+};
 
 //prints posts with a change in vote count
-Execution.prototype.printchangedPosts = function () {};
+Execution.prototype.printChangedPosts = function () {
+  if (Object.keys(this.changedPosts).length) {
+    console.log(chalk.blue.bold(`Posts with a change in vote count:`));
+
+    const changePostsArray = Object.values(this.changedPosts);
+    //create a shallow copy to do in-place sorting
+    const sortedChangePostsArray = [...changePostsArray].sort(
+      (post1, post2) => post2.upVotes - post1.upVotes
+    );
+    sortedChangePostsArray.forEach((post, index) => {
+      const upVoteChange =
+        post.changeInUpVotes > 0
+          ? chalk.green.bold(post.changeInUpVotes.toLocaleString())
+          : chalk.red.bold(post.changeInUpVotes.toLocaleString());
+      const downVoteChange =
+        post.changeInDownVotes > 0
+          ? chalk.green.bold(post.changeInDownVotes.toLocaleString())
+          : chalk.red.bold(post.changeInDownVotes.toLocaleString());
+      console.log(`${chalk.yellow.bold(index + 1)}.`, post.title);
+      console.log(
+        'upvotes: ',
+        chalk.green.bold(post.upVotes.toLocaleString()),
+        'change in upvotes: ',
+        upVoteChange
+      );
+      console.log(
+        'downvotes: ',
+        chalk.red.bold(post.downVotes.toLocaleString()),
+        'change in downvotes: ',
+        downVoteChange,
+        '\n'
+      );
+    });
+  } else {
+    console.log(chalk.blue.bold(`No posts left the top ${this.numPosts} \n`));
+  }
+};
 
 module.exports = Execution;
