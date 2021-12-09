@@ -1,4 +1,3 @@
-const chalk = require('chalk');
 const Execution = require('../classes/Execution');
 const fs = require('fs');
 
@@ -23,15 +22,18 @@ const run = async (subreddit = 'popular', numPosts = 75) => {
     prevRunData.currentExe.numPosts === numPosts
       ? prevRunData.currentExe
       : new Execution();
-  // console.log('prevExe is ', prevExe);
 
   const currentExe = new Execution();
+  //if a there was a previous run, set hasPrev to true
+  if (Object.keys(prevExe.allPosts).length) {
+    currentExe.hasPrev = true;
+  }
 
   //data gathering and storing calls
   await currentExe.fetchPostsAndExeDetails(subreddit, numPosts);
   //check if we need to compare against the previous run
   currentExe.getNewPosts(prevExe.allPosts);
-  if (Object.keys(prevExe.allPosts).length) {
+  if (currentExe.hasPrev) {
     currentExe.getOutOfTopPosts(prevExe.allPosts);
     currentExe.getChangedPosts(prevExe.allPosts);
   }

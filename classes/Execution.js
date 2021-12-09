@@ -12,6 +12,7 @@ class Execution {
     this.newPosts = {};
     this.postsOutOfTop = {};
     this.changedPosts = {};
+    this.hasPrev = false;
   }
 }
 
