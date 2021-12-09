@@ -2,7 +2,7 @@ const Execution = require('../classes/Execution');
 const chalk = require('chalk');
 const fs = require('fs');
 
-const prev = () => {
+const summary = () => {
   if (fs.existsSync(`reddit.json`)) {
     const prevRunData = JSON.parse(fs.readFileSync(`reddit.json`, 'utf8'));
     if (Object.keys(prevRunData).length) {
@@ -18,14 +18,11 @@ const prev = () => {
       }
 
       //   data printing calls
-      currentExe.printExeDetails();
+      currentExe.printExeDetails(true);
+      currentExe.printNewPostsSummary();
       if (currentExe.hasPrev) {
-        currentExe.printTimeFromLastExe();
-      }
-      currentExe.printNewPosts();
-      if (currentExe.hasPrev) {
-        currentExe.printOutOfTopPosts();
-        currentExe.printChangedPosts();
+        currentExe.printOutOfTopPostsSummary();
+        currentExe.printChangedPostsSummary();
       }
     }
     //if previous run empty, print no previous
@@ -39,4 +36,4 @@ const prev = () => {
   }
 };
 
-module.exports = prev;
+module.exports = summary;
